@@ -1,0 +1,146 @@
+-- -----------------------------------------------------
+-- ✅ 1️⃣ Create Database
+-- -----------------------------------------------------
+CREATE DATABASE IF NOT EXISTS mit_hostel_solutions;
+USE mit_hostel_solutions;
+
+-- -----------------------------------------------------
+-- ✅ 2️⃣ Warden Table
+-- -----------------------------------------------------
+CREATE TABLE warden (
+    warden_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    phone VARCHAR(15),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- -----------------------------------------------------
+-- ✅ 3️⃣ Student Table
+-- -----------------------------------------------------
+CREATE TABLE student (
+    usn VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    student_mobile VARCHAR(15) NOT NULL,
+    father_mobile VARCHAR(15),
+    mother_mobile VARCHAR(15),
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    department_name VARCHAR(100) NOT NULL,
+    year INT NOT NULL,
+    blood_group VARCHAR(10),
+    room_allocation_status ENUM('Pending','Allocated') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- -----------------------------------------------------
+-- ✅ 4️⃣ Room Table
+-- -----------------------------------------------------
+CREATE TABLE room (
+    room_no INT PRIMARY KEY,
+    no_of_beds INT NOT NULL,
+    no_of_tables INT DEFAULT 0,
+    no_of_fans INT DEFAULT 0,
+    no_of_chairs INT DEFAULT 0,
+    no_of_occupancy INT DEFAULT 0
+);
+
+-- -----------------------------------------------------
+-- ✅ 5️⃣ Allocation Table
+-- -----------------------------------------------------
+CREATE TABLE allocation (
+    usn VARCHAR(20) PRIMARY KEY,
+    room_no INT NOT NULL,
+    bed_no INT NOT NULL,
+    start_date DATE,
+    end_date DATE,
+    fees_amount DECIMAL(10,2),
+    FOREIGN KEY (usn) REFERENCES student(usn) ON DELETE CASCADE,
+    FOREIGN KEY (room_no) REFERENCES room(room_no) ON DELETE CASCADE
+);
+
+-- -----------------------------------------------------
+-- ✅ 6️⃣ Bed Table
+-- -----------------------------------------------------
+CREATE TABLE bed (
+    bed_id INT AUTO_INCREMENT PRIMARY KEY,
+    room_no INT NOT NULL,
+    bed_no INT NOT NULL,
+    occupied_by VARCHAR(20) DEFAULT NULL,
+    FOREIGN KEY (room_no) REFERENCES room(room_no) ON DELETE CASCADE,
+    FOREIGN KEY (occupied_by) REFERENCES allocation(usn) ON DELETE SET NULL
+);
+
+-- -----------------------------------------------------
+-- ✅ 7️⃣ Leave Request Table
+-- -----------------------------------------------------
+CREATE TABLE leave_request (
+    leave_id INT AUTO_INCREMENT PRIMARY KEY,
+    usn VARCHAR(20),
+    room_no INT,
+    from_date DATE,
+    to_date DATE,
+    reason TEXT,
+    contact VARCHAR(15),
+    warden_approval VARCHAR(20) NOT NULL DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usn) REFERENCES student(usn) ON DELETE CASCADE,
+    FOREIGN KEY (room_no) REFERENCES room(room_no) ON DELETE CASCADE
+);
+
+-- -----------------------------------------------------
+-- ✅ 8️⃣ Complaint Table
+-- -----------------------------------------------------
+CREATE TABLE complaint (
+    complaint_id INT AUTO_INCREMENT PRIMARY KEY,
+    usn VARCHAR(20),
+    room_no INT,
+    type ENUM('Electrical','Plumbing','Furniture','Other') DEFAULT 'Other',
+    description TEXT,
+    status ENUM('Pending','In Progress','Resolved') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usn) REFERENCES student(usn) ON DELETE CASCADE,
+    FOREIGN KEY (room_no) REFERENCES room(room_no) ON DELETE CASCADE
+);
+
+-- -----------------------------------------------------
+-- ✅ 9️⃣ Notice Table
+-- -----------------------------------------------------
+CREATE TABLE notice (
+    notice_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(150) NOT NULL,
+    description TEXT NOT NULL,
+    date_posted DATE DEFAULT (CURDATE())
+);
+
+-- -----------------------------------------------------
+-- ✅ 🔟 Fees Table
+-- -----------------------------------------------------
+CREATE TABLE fees (
+    usn VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(100),
+    total_fee DECIMAL(10,2),
+    paid DECIMAL(10,2) DEFAULT 0.00,
+    pending DECIMAL(10,2) GENERATED ALWAYS AS (total_fee - paid) STORED,
+    status VARCHAR(50),
+    due_date DATE,
+    FOREIGN KEY (usn) REFERENCES student(usn) ON DELETE CASCADE
+);
+
+-- -----------------------------------------------------
+-- ✅ 1️⃣1️⃣ (Optional) Activity Log Table
+-- -----------------------------------------------------
+CREATE TABLE activity_log (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_type ENUM('Warden','Student'),
+    user_id VARCHAR(20),
+    action VARCHAR(255),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- -----------------------------------------------------
+-- ✅ 1️⃣2️⃣ Initial Warden Insert (optional)
+-- -----------------------------------------------------
+INSERT INTO warden (name, email, password, phone)
+VALUES ('Default Warden', 'warden@mit.edu', 'warden123', '9999999999');
